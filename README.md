@@ -42,7 +42,7 @@ We're grateful for this contribution to the Unity community and committed to mai
 
 1. Open Unity Package Manager (**Window > Package Manager**)
 2. Click **+** → **Add package from git URL**
-3. Enter: `https://github.com/Frost-Blade-Studios/Motion-Matching-for-Unity.git`
+3. Enter: `https://github.com/stylovich/Motion-Matching-for-Unity.git`
 
 For detailed installation instructions, see the [Getting Started Guide](https://motion-matching-for-unity.readthedocs.io/en/latest/getting-started/).
 
@@ -89,6 +89,12 @@ Unlike traditional Finite State Machines, Motion Matching:
 - **Unity 2020.3 LTS or newer** (2022.3 LTS recommended)
 - Humanoid or Generic animated characters
 - Animation clips (motion capture recommended for best results)
+
+### Animator Timing
+
+MxM reads `Animator.updateMode` to select the Animator update timing. In Unity 2022.3, use `AnimatorUpdateMode.AnimatePhysics` for physics-timed updates; Unity 2023.1 and newer use `AnimatorUpdateMode.Fixed` for the same setting.
+
+`Animator.animatePhysics` is a separate setting that synchronizes animated transforms with physics for interactions involving animated kinematic rigidbodies. Enable it when that interaction is needed; MxM respects the value configured on the Animator and does not require it for every character or CharacterController.
 
 ---
 
