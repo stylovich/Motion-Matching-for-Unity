@@ -49,6 +49,7 @@ namespace MxM
                 case EMxMAnimtype.Sequence: { } break;
                 case EMxMAnimtype.BlendSpace1D: { } break;
             }
+            m_animationStates[a_slotId].AnimDataId = m_currentAnimDataId;
         }
 
         //============================================================================================

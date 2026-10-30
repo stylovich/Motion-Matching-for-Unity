@@ -2364,7 +2364,6 @@ namespace MxM
         {
             ref MxMPlayableState primaryState = ref m_animationStates[m_primaryBlendChannel];
             primaryState.DecayAge = 0.0f;
-            primaryState.AnimDataId = m_currentAnimDataId;
 
             if (primaryState.BlendStatus != EBlendStatus.Dominant)
                 primaryState.BlendStatus = EBlendStatus.Decaying;
@@ -2930,6 +2929,7 @@ namespace MxM
                 m_desiredGoal = new TrajectoryPoint[CurrentAnimData.PosePredictionTimes.Length];
                 m_curInterpolatedPose = new PoseData(CurrentAnimData.Poses[a_startPoseId]);
                 m_chosenPose = CurrentAnimData.Poses[a_startPoseId];
+                m_curChosenPoseId = a_startPoseId;
                 m_dominantPose = m_chosenPose;
                 m_lastIdleGlobalClipId = m_dominantPose.PrimaryClipId;
 
@@ -2948,10 +2948,34 @@ namespace MxM
                     m_curCalibData = CurrentAnimData.CalibrationSets[0];
                 }
 
-                TransitionToPose(ref CurrentAnimData.Poses[a_startPoseId]);
+                if (m_transitionMethod == ETransitionMethod.Blend)
+                {
+                    // Base channels contain dataset-local pose and animation IDs. They cannot
+                    // decay against a different dataset; external animation layers stay intact.
+                    for (int i = 0; i < m_animationStates.Length; ++i)
+                    {
+                        ClearPlayablesInSlot(i);
+                        m_animationStates[i] = new MxMPlayableState(i, ref m_animationMixer);
+                        m_animationMixer.SetInputWeight(i, 0f);
+                    }
+                    m_primaryBlendChannel = m_dominantBlendChannel = 0;
+                    SetupPoseInSlot(ref m_chosenPose, 0);
+                    ref MxMPlayableState entry = ref m_animationStates[0];
+                    entry.SetAsChosenWithPoseNoBlend(ref m_chosenPose, entry.AnimSpeedMod, 0f);
+                    entry.AnimDataId = m_currentAnimDataId;
+                    m_animationMixer.SetInputWeight(0, 1f);
+                    m_cachedLastLeftFootstepId = m_cachedLastRightFootstepId = 0;
+                }
+                else
+                {
+                    TransitionToPose(ref CurrentAnimData.Poses[a_startPoseId]);
+                }
 #if UNITY_EDITOR
                 DebugData.ResetUsedPoseData();
 #endif
+                // Invoke last: listeners may synchronously cancel and restore another dataset.
+                if (m_transitionMethod == ETransitionMethod.Blend)
+                    m_onPoseChanged.Invoke(new PoseChangeData(a_startPoseId, 1f, 0f));
             }
         }
 
